@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Expense Tracker</title>
+  <style>
+    :root { color-scheme: light; --ink: #17251f; --muted: #738078; --green: #1c704d; --line: #e8eee9; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #f4f7f3; color: var(--ink); font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 17px; }
+    .page { width: min(100% - 2rem, 1000px); margin: 0 auto; padding: 3rem 0; }
+    .hero { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1.5rem; }
+    .eyebrow { margin: 0 0 .55rem; color: var(--green); font-size: .85rem; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(2.3rem, 5.5vw, 3.4rem); letter-spacing: -.055em; }
+    .subtitle { color: var(--muted); margin: .55rem 0 0; }
+    .hero-icon { display: grid; place-items: center; width: 4.4rem; height: 4.4rem; border-radius: 1.4rem; background: #dff1e5; font-size: 2rem; transform: rotate(4deg); }
+    .card { background: white; border: 1px solid var(--line); border-radius: 1.2rem; box-shadow: 0 8px 24px #203c2a0a; padding: 1.4rem; margin-bottom: 1.2rem; }
+    .card-heading { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+    h2 { margin: 0; font-size: 1.3rem; letter-spacing: -.02em; }
+    .hint { color: var(--muted); font-size: .95rem; }
+    form { display: grid; grid-template-columns: 1fr 1.6fr 1.2fr auto; gap: .75rem; align-items: end; }
+    label { display: grid; gap: .4rem; color: #526158; font-size: .95rem; font-weight: 700; }
+    input, select { width: 100%; border: 1px solid #dce5de; border-radius: .7rem; padding: .9rem 1rem; color: var(--ink); background: #fff; font: inherit; outline: none; }
+    input:focus, select:focus { border-color: #68a582; box-shadow: 0 0 0 3px #68a58224; }
+    button { border: 0; border-radius: .7rem; padding: .78rem 1rem; background: var(--green); color: white; font: inherit; font-weight: 750; cursor: pointer; transition: transform .15s, background .15s; }
+    button:hover { background: #155c3d; transform: translateY(-1px); }
+    .delete-button { padding: .55rem .8rem; color: #a34040; background: #fff1ef; font-size: .9rem; }
+    .delete-button:hover { color: white; background: #b84747; }
+    #message, #income-message { min-height: 1rem; margin: .7rem 0 0; color: var(--green); font-size: .98rem; }
+    .stats { display: flex; align-items: center; gap: .8rem; color: var(--muted); font-size: .95rem; }
+    .stats strong { color: var(--ink); font-size: 1.1rem; }
+    .table-wrap { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th { padding: .85rem .65rem; color: #87928b; font-size: .82rem; letter-spacing: .08em; text-align: left; text-transform: uppercase; }
+    td { padding: 1rem .65rem; border-top: 1px solid #edf1ed; font-size: 1rem; }
+    td.amount { font-weight: 750; font-variant-numeric: tabular-nums; }
+    .category { display: inline-flex; align-items: center; gap: .4rem; padding: .4rem .7rem; border-radius: 2rem; background: #f1f6f2; color: #486354; font-size: .9rem; }
+    .expense-search { max-width: 28rem; margin: 0 0 1rem; }
+    .overview-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .85rem; margin-bottom: 1.2rem; }
+    .overview-tile { padding: 1rem 1.2rem; border: 1px solid var(--line); border-radius: 1rem; background: white; box-shadow: 0 8px 24px #203c2a0a; }
+    .overview-tile span { display: block; color: var(--muted); font-size: .9rem; }
+    .overview-tile strong { display: block; margin-top: .3rem; font-size: 1.35rem; font-variant-numeric: tabular-nums; }
+    .overview-tile.balance strong { color: var(--green); }
+    .overview-tile.balance strong.negative { color: #a34040; }
+    .income-form { grid-template-columns: 1fr 1.6fr auto; margin-bottom: 1rem; }
+    .income-table { margin-top: .5rem; }
+    .income-amount { color: var(--green); font-weight: 750; font-variant-numeric: tabular-nums; }
+    .tips-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .85rem; }
+    .tip-item { padding: 1rem; border: 1px solid #e8eee9; border-radius: .9rem; background: #fbfcfa; }
+    .tip-item h3 { margin: 0 0 .4rem; font-size: 1rem; }
+    .tip-item p { margin: 0; color: #58675e; font-size: .95rem; line-height: 1.55; }
+    .tip-sources { margin: 1rem 0 0; color: var(--muted); font-size: .85rem; line-height: 1.6; }
+    .tip-sources a { color: var(--green); }
+    .empty { padding: 2rem; color: var(--muted); text-align: center; }
+    .chart-frame { overflow: hidden; border-radius: .8rem; background: #fbfcfa; }
+    img { display: block; width: 100%; height: auto; }
+    footer { padding: .5rem 0; color: #9aa59e; font-size: .78rem; text-align: center; }
+    @media (max-width: 720px) { .page { padding: 2rem 0; } form { grid-template-columns: 1fr 1fr; } form button { min-height: 2.8rem; } }
+    @media (max-width: 600px) { .overview-grid { grid-template-columns: 1fr; gap: .55rem; } .overview-tile { padding: .85rem 1rem; } .income-form { grid-template-columns: 1fr 1fr; } }
+    @media (max-width: 600px) { .tips-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 480px) { .hero-icon { width: 3.5rem; height: 3.5rem; } form, .income-form { grid-template-columns: 1fr; } .card { padding: 1rem; } th, td { padding: .7rem .45rem; } }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Your money, in view</p>
+        <h1>Expense tracker</h1>
+        <p class="subtitle">A little clarity for your everyday spending.</p>
+      </div>
+      <div class="hero-icon" aria-hidden="true">🌱</div>
+    </header>
+
+    <section class="overview-grid" aria-label="This month overview">
+      <div class="overview-tile"><span>Money in this month</span><strong id="month-income">₹0.00</strong></div>
+      <div class="overview-tile"><span>Spent this month</span><strong id="month-expenses">₹0.00</strong></div>
+      <div class="overview-tile balance"><span>Income minus spending this month</span><strong id="month-balance">₹0.00</strong></div>
+    </section>
+
+    <section class="card" aria-labelledby="add-heading">
+      <div class="card-heading">
+        <h2 id="add-heading">Add an expense</h2>
+        <span class="hint">Keep it simple, keep it current.</span>
+      </div>
+      <form id="expense-form">
+        <label>Amount
+          <input name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+        </label>
+        <label>Description
+          <input name="description" type="text" placeholder="What did you spend on?" required>
+        </label>
+        <label>Category
+          <select name="category" required>
+            {% for category in categories %}<option value="{{ category }}">{{ category }}</option>{% endfor %}
+          </select>
+        </label>
+        <button type="submit">＋ Add expense</button>
+      </form>
+      <p id="message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section class="card" aria-labelledby="income-heading">
+      <div class="card-heading">
+        <div>
+          <h2 id="income-heading">Money in</h2>
+          <span class="hint">Add salary, refunds, gifts, or other incoming money.</span>
+        </div>
+        <span aria-hidden="true">💰</span>
+      </div>
+      <form id="income-form" class="income-form">
+        <label>Amount
+          <input name="amount" type="number" min="0.01" step="0.01" placeholder="0.00" required>
+        </label>
+        <label>Source
+          <input name="description" type="text" placeholder="Salary, refund, gift…" required>
+        </label>
+        <button type="submit">＋ Add income</button>
+      </form>
+      <p id="income-message" role="status" aria-live="polite"></p>
+      <h2 class="income-table">Recent income</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Amount</th><th>Source</th><th></th></tr></thead>
+          <tbody id="income-list"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="expenses-heading">
+      <div class="card-heading">
+        <h2 id="expenses-heading">Recent expenses</h2>
+        <div class="stats"><span id="expense-count">0 items</span></div>
+      </div>
+      <label class="expense-search">Search expenses
+        <input id="expense-search" type="search" placeholder="Search description or category…" autocomplete="off">
+      </label>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Date</th><th>Amount</th><th>Description</th><th>Category</th><th></th></tr></thead>
+          <tbody id="expense-list"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card" aria-labelledby="chart-heading">
+      <div class="card-heading">
+        <div><h2 id="chart-heading">Your spending, visualized</h2><span class="hint">Category mix and daily flow this month</span></div>
+        <span aria-hidden="true">📈</span>
+      </div>
+      <div class="chart-frame"><img id="chart" src="/chart" alt="Pie chart of spending by category and line chart of daily spending this month"></div>
+    </section>
+
+    <section class="card" aria-labelledby="tips-heading">
+      <div class="card-heading">
+        <div>
+          <h2 id="tips-heading">Small steps for your money</h2>
+          <span class="hint">General ideas to help you build steady habits</span>
+        </div>
+        <span aria-hidden="true">💡</span>
+      </div>
+      <div class="tips-grid">
+        <article class="tip-item">
+          <h3>Review spending weekly</h3>
+          <p>Use your expense list to spot repeat costs and decide what you want to adjust next week.</p>
+        </article>
+        <article class="tip-item">
+          <h3>Give savings a target</h3>
+          <p>Choose a clear amount and date for a goal, then set aside a manageable amount regularly.</p>
+        </article>
+        <article class="tip-item">
+          <h3>Build a safety buffer</h3>
+          <p>Build emergency savings little by little. RBI suggests working toward enough to cover at least three months of expenses, kept somewhere you can access easily.</p>
+        </article>
+        <article class="tip-item">
+          <h3>Invest with a plan</h3>
+          <p>Choose investments based on what you are saving for, when you will need the money, and how much risk you can handle. Spread your money across different types of investments, and remember their value can go down.</p>
+        </article>
+      </div>
+      <p class="tip-sources">
+        Learn more:
+        <a href="https://www.rbi.org.in/FinancialEducation/content/I%20Can%20Do_RBI.pdf" target="_blank" rel="noopener noreferrer">RBI emergency fund guidance</a>
+        · <a href="https://investor.sebi.gov.in/moneymatters-budandfinangoal.html" target="_blank" rel="noopener noreferrer">SEBI budgeting and goal setting</a>
+        · <a href="https://investor.sebi.gov.in/investment-thingsbeforeinv.html" target="_blank" rel="noopener noreferrer">SEBI investing basics</a>.
+        For education only; this is not personal investment advice.
+      </p>
+    </section>
+    <footer>Small steps add up 🌿</footer>
+  </main>
+
+  <script>
+    const form = document.getElementById('expense-form');
+    const incomeForm = document.getElementById('income-form');
+    const list = document.getElementById('expense-list');
+    const incomeList = document.getElementById('income-list');
+    const message = document.getElementById('message');
+    const incomeMessage = document.getElementById('income-message');
+    const searchInput = document.getElementById('expense-search');
+    const categoryIcons = { Food: '🍽️', Travel: '🚆', Bills: '🧾', Shopping: '🛍️', Entertainment: '🎟️', Other: '✨' };
+    const formatMoney = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 });
+    let allExpenses = [];
+    let allIncome = [];
+
+    async function loadExpenses() {
+      const response = await fetch('/expenses');
+      allExpenses = await response.json();
+      renderExpenses();
+    }
+
+    async function loadIncome() {
+      const response = await fetch('/income');
+      allIncome = await response.json();
+      renderIncome();
+    }
+
+    async function refreshData() {
+      await Promise.all([loadExpenses(), loadIncome()]);
+      await loadSummary();
+    }
+
+    function renderExpenses() {
+      const query = searchInput.value.trim().toLocaleLowerCase();
+      const expenses = allExpenses.filter((expense) =>
+        `${expense.description} ${expense.category} ${expense.date}`.toLocaleLowerCase().includes(query)
+      );
+      list.replaceChildren();
+      const countLabel = query ? `${expenses.length} of ${allExpenses.length} shown` : `${expenses.length} ${expenses.length === 1 ? 'item' : 'items'}`;
+      document.getElementById('expense-count').textContent = countLabel;
+      if (expenses.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 5;
+        cell.className = 'empty';
+        cell.textContent = allExpenses.length ? 'No matching expenses. Try another search.' : 'No expenses yet. Add your first one above.';
+        row.appendChild(cell);
+        list.appendChild(row);
+      }
+      for (const expense of expenses) {
+        const row = document.createElement('tr');
+        const dateCell = document.createElement('td');
+        dateCell.textContent = expense.date;
+        row.appendChild(dateCell);
+        const amountCell = document.createElement('td');
+        amountCell.className = 'amount';
+        amountCell.textContent = formatMoney.format(Number(expense.amount));
+        row.appendChild(amountCell);
+        const descriptionCell = document.createElement('td');
+        descriptionCell.textContent = expense.description;
+        row.appendChild(descriptionCell);
+        const categoryCell = document.createElement('td');
+        const badge = document.createElement('span');
+        badge.className = 'category';
+        badge.textContent = `${categoryIcons[expense.category] || '•'} ${expense.category}`;
+        categoryCell.appendChild(badge);
+        row.appendChild(categoryCell);
+        const actionCell = document.createElement('td');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'delete-button';
+        button.textContent = 'Delete';
+        button.addEventListener('click', () => deleteExpense(expense.id));
+        actionCell.appendChild(button);
+        row.appendChild(actionCell);
+        list.appendChild(row);
+      }
+    }
+
+    searchInput.addEventListener('input', renderExpenses);
+
+    function renderIncome() {
+      incomeList.replaceChildren();
+      if (allIncome.length === 0) {
+        const row = document.createElement('tr');
+        const cell = document.createElement('td');
+        cell.colSpan = 4;
+        cell.className = 'empty';
+        cell.textContent = 'No income entries yet. Add money received above.';
+        row.appendChild(cell);
+        incomeList.appendChild(row);
+      }
+      for (const entry of allIncome) {
+        const row = document.createElement('tr');
+        const dateCell = document.createElement('td');
+        dateCell.textContent = entry.date;
+        row.appendChild(dateCell);
+        const amountCell = document.createElement('td');
+        amountCell.className = 'income-amount';
+        amountCell.textContent = formatMoney.format(Number(entry.amount));
+        row.appendChild(amountCell);
+        const sourceCell = document.createElement('td');
+        sourceCell.textContent = entry.description;
+        row.appendChild(sourceCell);
+        const actionCell = document.createElement('td');
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'delete-button';
+        button.textContent = 'Delete';
+        button.addEventListener('click', () => deleteIncome(entry.id));
+        actionCell.appendChild(button);
+        row.appendChild(actionCell);
+        incomeList.appendChild(row);
+      }
+    }
+
+    async function loadSummary() {
+      const [expenseResponse, incomeResponse] = await Promise.all([
+        fetch('/summary'),
+        fetch('/income/summary')
+      ]);
+      const expenseTotals = await expenseResponse.json();
+      const incomeSummary = await incomeResponse.json();
+      const expenses = Object.values(expenseTotals).reduce((sum, amount) => sum + Number(amount), 0);
+      const income = Number(incomeSummary.total);
+      const balance = income - expenses;
+      document.getElementById('month-income').textContent = formatMoney.format(income);
+      document.getElementById('month-expenses').textContent = formatMoney.format(expenses);
+      const balanceElement = document.getElementById('month-balance');
+      balanceElement.textContent = formatMoney.format(balance);
+      balanceElement.classList.toggle('negative', balance < 0);
+    }
+
+    function refreshChart() {
+      document.getElementById('chart').src = `/chart?updated=${Date.now()}`;
+    }
+
+    async function deleteExpense(id) {
+      const response = await fetch(`/expenses/${id}`, { method: 'DELETE' });
+      const result = await response.json();
+      message.textContent = response.ok ? result.message : result.error;
+      if (response.ok) {
+        await refreshData();
+        refreshChart();
+      }
+    }
+
+    async function deleteIncome(id) {
+      const response = await fetch(`/income/${id}`, { method: 'DELETE' });
+      const result = await response.json();
+      incomeMessage.textContent = response.ok ? result.message : result.error;
+      if (response.ok) await refreshData();
+    }
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const values = new FormData(form);
+      const response = await fetch('/expenses', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: values.get('amount'),
+          description: values.get('description'),
+          category: values.get('category')
+        })
+      });
+      const result = await response.json();
+      message.textContent = response.ok ? 'Expense added.' : result.error;
+      if (response.ok) {
+        form.reset();
+        await refreshData();
+        refreshChart();
+      }
+    });
+
+    incomeForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const values = new FormData(incomeForm);
+      const response = await fetch('/income', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          amount: values.get('amount'),
+          description: values.get('description')
+        })
+      });
+      const result = await response.json();
+      incomeMessage.textContent = response.ok ? 'Income added.' : result.error;
+      if (response.ok) {
+        incomeForm.reset();
+        await refreshData();
+      }
+    });
+
+    refreshData();
+  </script>
+</body>
+</html>
